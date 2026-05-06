@@ -6,9 +6,9 @@
 
   <a href="#install"><img src="https://img.shields.io/pypi/v/pureframe?color=%2334D058&label=PyPI" alt="PyPI" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT" /></a>
-  <a href="https://github.com/PotatoFlavouredCondom/PureFrame/actions"><img src="https://img.shields.io/github/actions/workflow/status/PotatoFlavouredCondom/PureFrame/ci.yml?label=CI" alt="CI" /></a>
+  <a href="https://github.com/MayonaiseLover/PureFrame/actions"><img src="https://img.shields.io/github/actions/workflow/status/MayonaiseLover/PureFrame/ci.yml?label=CI" alt="CI" /></a>
   <img src="https://img.shields.io/badge/status-v0.1.0--beta-orange" alt="Status: v0.1.0-beta" />
-  [![status](https://img.shields.io/badge/status-early--beta-orange)]()
+
 
   <br /><br />
   <img src="assets/demo.gif" alt="PureFrame in action" width="640" />
