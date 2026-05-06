@@ -1,0 +1,103 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.12, pytest-9.0.3, pluggy-1.5.0
+rootdir: /home/potato/Downloads/githup/PureFrame(antigravity)
+configfile: pyproject.toml
+plugins: anyio-4.10.0
+collected 1 item
+
+tests/test_e2e.py F                                                      [100%]
+
+=================================== FAILURES ===================================
+______________________________ test_pipeline_e2e _______________________________
+
+synthetic_video = PosixPath('/home/potato/Downloads/githup/PureFrame(antigravity)/tests/fixtures/synthetic_explicit.mp4')
+tmp_path = PosixPath('/tmp/pytest-of-potato/pytest-10/test_pipeline_e2e0')
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x785e58b5b5c0>
+
+    def test_pipeline_e2e(synthetic_video, tmp_path, monkeypatch):
+        out_path = tmp_path / "output.mp4"
+    
+        # We must mock NudityDetector to actually detect our synthetic ellipse
+        # since real NudeNet won't trigger on a grey video with a pink ellipse.
+        from pureframe.pipeline.detect.nudity import NudityDetector, Detection
+        import pureframe.cli
+        from pureframe.hardware import ProfileSettings, HardwareProfile
+    
+        # Patch settings so we sample enough frames to definitely hit 100-250
+        original_get_settings = pureframe.cli.get_settings
+        def mocked_get_settings(profile):
+            s = original_get_settings(profile)
+            s.sample_keyframes_per_shot = 10
+            return s
+        monkeypatch.setattr(pureframe.cli, "get_settings", mocked_get_settings)
+    
+        original_detect_batch = NudityDetector.detect_batch
+    
+        def mocked_detect_batch(self, frames_bgr):
+            batch_res = []
+            for frame in frames_bgr:
+                # Reconstruct dimensions to check if it has the shape.
+                h, w = frame.shape[:2]
+                # Since the frame might be downscaled, we just check the center pixel relative to its size
+                # Original was 1280x720, ellipse at 300, 250
+                px_x = int(300 * w / 1280)
+                px_y = int(250 * h / 720)
+    
+                pixel = frame[px_y, px_x]
+                # If it's not grey, it has the ellipse
+                if not np.allclose(pixel, [128, 128, 128], atol=20):
+                    # We want a box that covers roughly (200, 150) to (400, 350) in original 1280x720 space
+                    bx1 = int(200 * w / 1280)
+                    by1 = int(150 * h / 720)
+                    bx2 = int(400 * w / 1280)
+                    by2 = int(350 * h / 720)
+                    batch_res.append([Detection(label="FEMALE_BREAST_EXPOSED", score=0.99, box=(bx1, by1, bx2, by2))])
+                else:
+                    batch_res.append([])
+            return batch_res
+    
+        monkeypatch.setattr(NudityDetector, "detect_batch", mocked_detect_batch)
+    
+        from pureframe.cli import process_file
+        from pureframe.config import Config
+    
+        config = Config.from_cli(
+            input_path=synthetic_video,
+            output_path=out_path,
+            profile=HardwareProfile.CPU,
+            nudity_threshold=0.5,
+            strict=False,
+            no_clip=False,
+            no_audio=False,
+            log_level="DEBUG"
+        )
+        process_file(config)
+    
+>       assert out_path.exists()
+E       AssertionError: assert False
+E        +  where False = exists()
+E        +    where exists = PosixPath('/tmp/pytest-of-potato/pytest-10/test_pipeline_e2e0/output.mp4').exists
+
+Config     = <class 'pureframe.config.Config'>
+Detection  = <class 'pureframe.pipeline.detect.nudity.Detection'>
+HardwareProfile = <enum 'HardwareProfile'>
+NudityDetector = <class 'pureframe.pipeline.detect.nudity.NudityDetector'>
+ProfileSettings = <class 'pureframe.hardware.ProfileSettings'>
+config     = Config(input_path=PosixPath('/home/potato/Downloads/githup/PureFrame(antigravity)/tests/fixtures/synthetic_explicit.mp...ox_color=(0, 0, 0), output_codec='h264', output_crf=20, log_level='DEBUG', strict=False, no_clip=False, no_audio=False)
+mocked_detect_batch = <function test_pipeline_e2e.<locals>.mocked_detect_batch at 0x785d9e0f36a0>
+mocked_get_settings = <function test_pipeline_e2e.<locals>.mocked_get_settings at 0x785d9e0f3880>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x785e58b5b5c0>
+original_detect_batch = <function NudityDetector.detect_batch at 0x785e5bd196c0>
+original_get_settings = <function get_settings at 0x785ea0121760>
+out_path   = PosixPath('/tmp/pytest-of-potato/pytest-10/test_pipeline_e2e0/output.mp4')
+process_file = <function process_file at 0x785d9e148180>
+pureframe  = <module 'pureframe' from '/home/potato/Downloads/githup/PureFrame(antigravity)/pureframe/__init__.py'>
+synthetic_video = PosixPath('/home/potato/Downloads/githup/PureFrame(antigravity)/tests/fixtures/synthetic_explicit.mp4')
+tmp_path   = PosixPath('/tmp/pytest-of-potato/pytest-10/test_pipeline_e2e0')
+
+tests/test_e2e.py:83: AssertionError
+----------------------------- Captured stdout call -----------------------------
+Job 1 for synthetic_explicit.mp4 is already DONE. Skipping.
+=========================== short test summary info ============================
+FAILED tests/test_e2e.py::test_pipeline_e2e - AssertionError: assert False
+============================== 1 failed in 4.40s ===============================
