@@ -58,3 +58,4 @@ Source = "https://github.com/MayonaiseLover/PureFrame"
 
 [tool.hatch.build.targets.wheel]
 packages = ["pureframe"]
+
