@@ -486,7 +486,10 @@ def plan_edit_cmd(
     import shlex
 
     while True:
-        editor_cmd = shlex.split(editor)
+        # On Windows we must keep backslashes literal — shlex POSIX mode would
+        # treat them as escape characters and mangle paths like
+        # ``C:\Python311\python.exe``.
+        editor_cmd = shlex.split(editor, posix=(os.name != "nt"))
         editor_cmd.append(str(plan_path))
         subprocess.call(editor_cmd)
 
