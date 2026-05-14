@@ -88,7 +88,7 @@ jobs:
           pureframe --help
 
       - name: Run fast tests with coverage
-        run: pytest -q -m "not slow" --maxfail=3 --cov=pureframe --cov-report=term-missing --cov-report=xml:coverage.xml
+        run: pytest -q -m "not slow" --maxfail=3 --timeout=180 --timeout-method=thread --cov=pureframe --cov-report=term-missing --cov-report=xml:coverage.xml
         timeout-minutes: 30
 
       - name: Upload coverage to Codecov
