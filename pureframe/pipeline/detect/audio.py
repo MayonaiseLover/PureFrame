@@ -41,8 +41,19 @@ class AudioClassifier:
         "smack": ("Smack", "Kiss"),
     }
 
-    def __init__(self, settings: ProfileSettings):
-        self.enabled = True
+    def __init__(self, settings: ProfileSettings, enabled: bool = True):
+        self.enabled = enabled
+
+        # When disabled we skip the heavyweight PANNs checkpoint download
+        # entirely. panns_inference.SoundEventDetection.__init__ shells out to
+        # `wget` on first use, which can hang in CI when there is no network
+        # or DNS resolution is slow. classify_segment short-circuits via
+        # self.enabled so the model is never needed.
+        if not enabled:
+            self.device = "cpu"
+            self.sed = None
+            self.label_idx = {}
+            return
 
         from panns_inference import SoundEventDetection
 

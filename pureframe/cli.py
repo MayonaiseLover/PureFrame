@@ -107,9 +107,11 @@ def generate_plan(config: Config) -> CensorPlan:
         if config.no_clip:
             scene_classifier.enabled = False
 
-        audio_classifier = AudioClassifier(settings)
-        if config.no_audio or len(meta.audio_streams) == 0:
-            audio_classifier.enabled = False
+        # Defer constructing the audio model when audio is disabled or the
+        # input has no audio streams. The PANNs ctor downloads a ~300MB
+        # checkpoint via wget on first use which can hang in CI.
+        audio_enabled = not (config.no_audio or len(meta.audio_streams) == 0)
+        audio_classifier = AudioClassifier(settings, enabled=audio_enabled)
 
         face_detector = FaceDetector()
 
