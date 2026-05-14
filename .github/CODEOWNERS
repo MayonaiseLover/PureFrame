@@ -1,0 +1,23 @@
+# CODEOWNERS — auto-request reviews from these owners when PRs touch matching paths.
+# Syntax: <pattern> <owner1> <owner2> ...
+# Reference: https://docs.github.com/en/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything not matched below.
+*                          @MayonaiseLover
+
+# Python pipeline core.
+/pureframe/                @MayonaiseLover
+/tests/                    @MayonaiseLover
+
+# Desktop GUI (Tauri + React).
+/gui/                      @MayonaiseLover
+/gui/src-tauri/            @MayonaiseLover
+
+# CI / release automation — restrict to maintainers.
+/.github/                  @MayonaiseLover
+/.github/workflows/        @MayonaiseLover
+
+# Security-sensitive surfaces.
+SECURITY.md                @MayonaiseLover
+/pureframe/utils/ffmpeg.py @MayonaiseLover
+/gui/src-tauri/src/lib.rs  @MayonaiseLover
