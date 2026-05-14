@@ -341,7 +341,10 @@ def execute_render(plan: CensorPlan, config: Config, smart: bool = True):
     except KeyboardInterrupt:
         store.update_status(job.id, "FAILED", error="Interrupted during rendering")
         raise
-    except BaseException as e:
+    except Exception as e:
+        # Catching ``Exception`` (not ``BaseException``) so that SystemExit
+        # and KeyboardInterrupt propagate cleanly without being logged as
+        # render failures.
         import traceback
 
         traceback.print_exc()

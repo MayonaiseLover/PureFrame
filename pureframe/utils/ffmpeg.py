@@ -110,9 +110,14 @@ def select_hw_encoder(profile: HardwareProfile, codec: str) -> str:
     except Exception:
         return base
 
-    encoders = [
-        line.split()[1] for line in output.splitlines() if line.strip().startswith("V")
-    ]
+    encoders: list[str] = []
+    for line in output.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith("V"):
+            continue
+        parts = stripped.split()
+        if len(parts) >= 2:
+            encoders.append(parts[1])
 
     if codec == "h264":
         if "h264_nvenc" in encoders:
@@ -184,7 +189,14 @@ def write_video_with_overlay(
     settings: ProfileSettings,
     encoder: str,
     crf: int,
+    ss: float | None = None,
+    to: float | None = None,
 ) -> None:
+    """Re-encode *input_path* to *output_path*, applying *overlay_callback* per frame.
+
+    Optional ``ss``/``to`` (seconds) restrict decoding to a sub-range, used by
+    the smart segment renderer to re-encode only dirty segments.
+    """
     import tempfile
     import os
 
@@ -196,9 +208,14 @@ def write_video_with_overlay(
 
     logger.info(f"Writing temp video to {temp_video}")
 
-    # 1. decode frames to raw BGR24
+    # 1. decode frames to raw BGR24 (optionally restricted to [ss, to])
+    in_kwargs: dict = {}
+    if ss is not None:
+        in_kwargs["ss"] = f"{ss:.3f}"
+    if to is not None:
+        in_kwargs["to"] = f"{to:.3f}"
     process_in = (
-        ffmpeg.input(str(input_path))
+        ffmpeg.input(str(input_path), **in_kwargs)
         .output("pipe:", format="rawvideo", pix_fmt="bgr24")
         .run_async(pipe_stdout=True, pipe_stderr=True)
     )
@@ -270,30 +287,28 @@ def write_video_with_overlay(
             process_out.stdin.close()
         process_out.wait()
 
-    # Mux back
+    # Mux back. If a sub-range was decoded, slice audio/subs to match.
     logger.info("Muxing audio and subtitles...")
+    mux_cmd: list[str] = ["ffmpeg", "-y", "-i", temp_video]
+    if ss is not None:
+        mux_cmd += ["-ss", f"{ss:.3f}"]
+    if to is not None:
+        mux_cmd += ["-to", f"{to:.3f}"]
+    mux_cmd += [
+        "-i",
+        str(input_path),
+        "-map",
+        "0:v:0",
+        "-map",
+        "1:a?",
+        "-map",
+        "1:s?",
+        "-c",
+        "copy",
+        str(output_path),
+    ]
     try:
-        subprocess.run(
-            [
-                "ffmpeg",
-                "-y",
-                "-i",
-                temp_video,
-                "-i",
-                str(input_path),
-                "-map",
-                "0:v:0",
-                "-map",
-                "1:a?",
-                "-map",
-                "1:s?",
-                "-c",
-                "copy",
-                str(output_path),
-            ],
-            check=True,
-            stderr=subprocess.DEVNULL,
-        )
+        subprocess.run(mux_cmd, check=True, stderr=subprocess.DEVNULL)
     except subprocess.CalledProcessError as sub_e:
         raise PureFrameError(f"Muxing failed: {sub_e}")
     finally:
