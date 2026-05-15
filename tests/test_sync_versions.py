@@ -102,11 +102,11 @@ def test_update_cargo_version_only_touches_package_version(tmp_path: Path) -> No
     """Must not rewrite version specifiers inside [dependencies]."""
     p = tmp_path / "Cargo.toml"
     p.write_text(
-        '[package]\n'
+        "[package]\n"
         'name = "x"\n'
         'version = "0.0.1"\n'
-        '\n'
-        '[dependencies]\n'
+        "\n"
+        "[dependencies]\n"
         'serde = { version = "1.0", features = ["derive"] }\n',
         encoding="utf-8",
     )
