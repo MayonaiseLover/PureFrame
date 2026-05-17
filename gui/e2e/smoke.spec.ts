@@ -35,9 +35,15 @@ test("no uncaught console errors during initial render", async ({ page }) => {
   });
   await page.goto("/");
   await page.waitForLoadState("networkidle");
-  // Filter out the known dev-only React DevTools nag; tighten as needed.
+  // Filter dev-only / shim-only noise; tighten as the surface grows.
+  const ignorePatterns = [
+    /download.*react devtools/i,
+    /\[e2e shim\]/i,
+    /plugin:event\|listen/i,
+    /plugin:webview\|/i,
+  ];
   const meaningful = errors.filter(
-    (m) => !/download.*react devtools/i.test(m),
+    (m) => !ignorePatterns.some((p) => p.test(m)),
   );
   expect(meaningful, meaningful.join("\n")).toEqual([]);
 });

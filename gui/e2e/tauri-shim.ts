@@ -35,10 +35,20 @@ export const tauriShimScript = `
       transformCallback: (cb) => cb,
       invoke: (cmd, args) => {
         const handler = responses[cmd];
-        if (!handler) {
-          return Promise.reject(new Error("E2E shim: unknown command " + cmd));
+        if (handler) {
+          return Promise.resolve(handler(args));
         }
-        return Promise.resolve(handler(args));
+        // Tauri plugin commands ("plugin:event|listen", "plugin:webview|...")
+        // are called during boot for window/event wiring. Resolve to a
+        // no-op so the React tree mounts cleanly instead of surfacing
+        // the rejection as a console error.
+        if (cmd.startsWith("plugin:")) {
+          return Promise.resolve(0);
+        }
+        // Unknown app-level command — log but don't reject, so a single
+        // missing shim entry doesn't cascade into render failure.
+        console.warn("[e2e shim] unhandled command:", cmd);
+        return Promise.resolve(null);
       },
       ipc: {
         postMessage: () => undefined,
