@@ -9,6 +9,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def _features_to_tensor(features):
+    """Return the projected feature tensor from a ``get_*_features`` call.
+
+    transformers 4.x returns a bare tensor; 5.x returns a
+    ``BaseModelOutputWithPooling`` whose ``pooler_output`` has been replaced
+    with the projected features. Supporting both keeps the pyproject floor
+    (>=4.30) honest without pinning.
+    """
+    pooled = getattr(features, "pooler_output", None)
+    return pooled if pooled is not None else features
+
+
 class ShotContext(BaseModel):
     explicit_act_score: float
     implied_sex_score: float
@@ -77,8 +89,16 @@ class SceneClassifier:
             text=self.text_inputs, return_tensors="pt", padding=True
         ).to(self.device)
         with torch.no_grad():
-            text_outputs = self.model.text_model(**inputs)
-            self.text_embeds = self.model.text_projection(text_outputs[1])
+            # Public API instead of poking at model internals —
+            # text_model()/vision_model() output layouts have shifted across
+            # transformers releases; get_*_features() is the stable contract
+            # and already applies the projection heads.
+            self.text_embeds = _features_to_tensor(
+                self.model.get_text_features(
+                    input_ids=inputs["input_ids"],
+                    attention_mask=inputs["attention_mask"],
+                )
+            )
             self.text_embeds = self.text_embeds / self.text_embeds.norm(
                 p=2, dim=-1, keepdim=True
             )
@@ -99,8 +119,9 @@ class SceneClassifier:
             inputs["pixel_values"] = inputs["pixel_values"].half()
 
         with torch.no_grad():
-            image_outputs = self.model.vision_model(**inputs)
-            image_embeds = self.model.visual_projection(image_outputs[1])
+            image_embeds = _features_to_tensor(
+                self.model.get_image_features(pixel_values=inputs["pixel_values"])
+            )
             image_embeds = image_embeds / image_embeds.norm(p=2, dim=-1, keepdim=True)
 
             # Cosine similarity per prompt (both sides L2-normalized).
