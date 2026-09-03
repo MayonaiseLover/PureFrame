@@ -9,16 +9,16 @@ Strategy:
 This gives 2-5x speedup on typical content where only 5-15% of frames are censored.
 """
 
-from pathlib import Path
+import logging
+import shutil
 import subprocess
 import tempfile
-import shutil
-import logging
+from pathlib import Path
 
 from pureframe.config import Config
 from pureframe.hardware import ProfileSettings
 from pureframe.pipeline.render.overlay import build_overlay_callback
-from pureframe.utils.ffmpeg import select_hw_encoder, write_video_with_overlay, probe
+from pureframe.utils.ffmpeg import probe, select_hw_encoder, write_video_with_overlay
 
 logger = logging.getLogger(__name__)
 

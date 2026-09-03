@@ -1,8 +1,11 @@
 from pathlib import Path
-import numpy as np
+
 import ffmpeg
-from .shots import Shot
+import numpy as np
+
 from pureframe.utils.ffmpeg import extract_metadata, probe
+
+from .shots import Shot
 
 
 def sample_keyframes(shot: Shot, n: int) -> list[int]:

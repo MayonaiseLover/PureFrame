@@ -1,10 +1,12 @@
-import torch
-from transformers import CLIPProcessor, CLIPModel
-from pydantic import BaseModel
-import numpy as np
-from PIL import Image
-from pureframe.hardware import ProfileSettings, HardwareProfile
 import logging
+
+import numpy as np
+import torch
+from PIL import Image
+from pydantic import BaseModel
+from transformers import CLIPModel, CLIPProcessor
+
+from pureframe.hardware import HardwareProfile, ProfileSettings
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +158,7 @@ class SceneClassifier:
         if hasattr(self, "text_embeds"):
             del self.text_embeds
         import gc
+
         import torch
 
         gc.collect()

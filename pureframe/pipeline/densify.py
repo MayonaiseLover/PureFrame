@@ -1,8 +1,9 @@
 from pathlib import Path
-from pureframe.pipeline.shots import Shot
-from pureframe.pipeline.detect.nudity import NudityDetector, Detection
+
 from pureframe.hardware import ProfileSettings
+from pureframe.pipeline.detect.nudity import Detection, NudityDetector
 from pureframe.pipeline.sample import extract_frames
+from pureframe.pipeline.shots import Shot
 
 
 def densify_shot(

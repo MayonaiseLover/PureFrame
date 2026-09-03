@@ -1,8 +1,10 @@
-from pureframe.pipeline.shots import Shot
-from pureframe.pipeline.detect.nudity import Detection
-from pureframe.tracking.iou_tracker import IoUTracker
-import numpy as np
 from collections import defaultdict
+
+import numpy as np
+
+from pureframe.pipeline.detect.nudity import Detection
+from pureframe.pipeline.shots import Shot
+from pureframe.tracking.iou_tracker import IoUTracker
 
 
 def smooth_detections(

@@ -1,8 +1,10 @@
-import pytest
-from pathlib import Path
 import subprocess
+from pathlib import Path
+
 import cv2
 import numpy as np
+import pytest
+
 from pureframe.hardware import HardwareProfile
 
 pytestmark = pytest.mark.slow
@@ -65,8 +67,8 @@ def _run_pipeline(tmp_path, monkeypatch, synthetic_video, blur_mode, out_name):
     """
     out_path = tmp_path / out_name
 
-    from pureframe.pipeline.detect.nudity import NudityDetector, Detection
     import pureframe.cli
+    from pureframe.pipeline.detect.nudity import Detection, NudityDetector
 
     # Patch settings so we sample enough frames to definitely hit 100-250
     original_get_settings = pureframe.cli.get_settings

@@ -1,11 +1,12 @@
-import subprocess
 import logging
+import subprocess
+from collections.abc import Callable, Iterator
 from fractions import Fraction
 from pathlib import Path
-from typing import Iterator, Callable
-from pydantic import BaseModel
+
 import ffmpeg
 import numpy as np
+from pydantic import BaseModel
 
 from pureframe.hardware import HardwareProfile, ProfileSettings
 
@@ -212,8 +213,8 @@ def write_video_with_overlay(
     Optional ``ss``/``to`` (seconds) restrict decoding to a sub-range, used by
     the smart segment renderer to re-encode only dirty segments.
     """
-    import tempfile
     import os
+    import tempfile
 
     meta = extract_metadata(probe(input_path))
 
