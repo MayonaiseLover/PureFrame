@@ -1,11 +1,11 @@
 from pathlib import Path
 import numpy as np
 import ffmpeg
-from .shots import ShotVerdict
+from .shots import Shot
 from pureframe.utils.ffmpeg import extract_metadata, probe
 
 
-def sample_keyframes(shot: ShotVerdict, n: int) -> list[int]:
+def sample_keyframes(shot: Shot, n: int) -> list[int]:
     length = shot.end_frame - shot.start_frame
     if length <= n:
         return list(range(shot.start_frame, shot.end_frame))
@@ -47,6 +47,21 @@ def extract_frames(
         .run_async(pipe_stdout=True, pipe_stderr=True)
     )
 
+    # Drain stderr in a background thread. Long `select` expressions make
+    # ffmpeg emit per-frame warnings; if nobody reads stderr, the OS pipe
+    # buffer fills up, ffmpeg blocks, and our stdout read deadlocks.
+    import threading
+
+    def _drain(pipe):
+        try:
+            while pipe.read(65536):
+                pass
+        except Exception:
+            pass
+
+    drain_t = threading.Thread(target=_drain, args=(process.stderr,), daemon=True)
+    drain_t.start()
+
     frame_size = w * h * 3
     results = {}
 
@@ -60,5 +75,6 @@ def extract_frames(
     finally:
         process.stdout.close()
         process.wait()
+        drain_t.join(timeout=2.0)
 
     return results

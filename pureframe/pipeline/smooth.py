@@ -1,4 +1,4 @@
-from pureframe.pipeline.shots import ShotVerdict
+from pureframe.pipeline.shots import Shot
 from pureframe.pipeline.detect.nudity import Detection
 from pureframe.tracking.iou_tracker import IoUTracker
 import numpy as np
@@ -7,7 +7,7 @@ from collections import defaultdict
 
 def smooth_detections(
     per_frame_detections: dict[int, list[Detection]],
-    shot: ShotVerdict,
+    shot: Shot,
     padding_pct: float,
 ) -> dict[int, list[tuple[int, int, int, int]]]:
     tracker = IoUTracker(iou_threshold=0.2, max_age=10)  # higher max age to bridge gaps

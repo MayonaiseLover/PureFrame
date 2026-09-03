@@ -33,6 +33,7 @@ dependencies = [
     "rich",
     "tqdm",
     "numpy>=1.24.0",
+    "scipy>=1.11.0",
     "transformers>=4.30.0",
     "panns-inference>=0.1.1",
     "librosa>=0.10.0",

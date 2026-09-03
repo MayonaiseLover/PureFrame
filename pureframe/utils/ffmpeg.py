@@ -355,8 +355,14 @@ def write_video_with_overlay(
         str(output_path),
     ]
     try:
-        subprocess.run(mux_cmd, check=True, stderr=subprocess.DEVNULL)
+        subprocess.run(mux_cmd, check=True, capture_output=True)
     except subprocess.CalledProcessError as sub_e:
-        raise PureFrameError(f"Muxing failed: {sub_e}")
+        stderr_tail = b""
+        if sub_e.stderr:
+            stderr_tail = sub_e.stderr
+        raise PureFrameError(
+            f"Muxing failed (exit {sub_e.returncode}). stderr (tail): "
+            f"{stderr_tail.decode(errors='replace')[-3000:]}"
+        )
     finally:
         os.remove(temp_video)

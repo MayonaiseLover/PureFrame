@@ -34,6 +34,7 @@ from pureframe.pipeline.detect.face import FaceDetector
 from pureframe.pipeline.fuse import fuse
 from pureframe.checkpoint import CheckpointStore
 from pureframe.pipeline.render.plan import CensorPlan
+from pureframe.utils.ffmpeg import PureFrameError
 
 # When running as a PyInstaller-frozen executable, prepend the executable's
 # directory to PATH so a co-bundled ffmpeg/ffprobe is discovered without the
@@ -344,6 +345,15 @@ def execute_render(plan: CensorPlan, config: Config, smart: bool = True):
                     get_settings(config.profile),
                 )
 
+        # A render that silently produced nothing must never be recorded as
+        # DONE — that is exactly how stale checkpoints went on to skip every
+        # future attempt ("already DONE. Skipping.") while no output existed.
+        out_file = Path(config.output_path) if config.output_path else None
+        if out_file is None or not out_file.exists() or out_file.stat().st_size == 0:
+            raise PureFrameError(
+                f"Render finished but the output file is missing or empty: {out_file}"
+            )
+
         store.update_status(job.id, "DONE")
         console.print(
             f"\n[bold green]Success![/bold green] Output saved to {config.output_path}"
@@ -366,7 +376,21 @@ def execute_render(plan: CensorPlan, config: Config, smart: bool = True):
 def process_file(config: Config):
     store = get_store()
     job = store.find_or_create_job(config.input_path, config.output_path, config)
-    if job.status == "DONE":
+
+    skip = job.status == "DONE" and not config.force
+    if skip and config.output_path is not None:
+        out_abs = Path(config.output_path).absolute()
+        # A DONE checkpoint only proves the job recorded back then. It does
+        # not apply when the caller now targets a different output path (the
+        # store is keyed on input + config hash), or when the previously
+        # rendered file has since been deleted or truncated. In those cases
+        # we must redo the work instead of silently producing nothing.
+        if job.output_path != str(out_abs):
+            skip = False
+        elif not out_abs.exists() or out_abs.stat().st_size == 0:
+            skip = False
+
+    if skip:
         console.print(
             f"[green]Job {job.id} for {config.input_path.name} is already DONE. Skipping.[/green]"
         )
