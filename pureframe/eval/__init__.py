@@ -612,18 +612,19 @@ def run_synthetic_benchmark(
     )
 
     if detector is None:
+        from pureframe.hardware import HardwareProfile, get_settings
         from pureframe.pipeline.detect.nudity import NudityDetector
 
-        detector = NudityDetector()
+        # CPU settings: deterministic across machines, no GPU variance in
+        # the numbers this gate compares.
+        detector = NudityDetector(get_settings(HardwareProfile.CPU))
 
-    # Explicit labels that should trigger censoring
-    explicit_labels = {
-        "EXPOSED_BREAST_F",
-        "EXPOSED_GENITALIA_F",
-        "EXPOSED_GENITALIA_M",
-        "EXPOSED_BUTTOCKS",
-        "EXPOSED_ANUS",
-    }
+    # Explicit labels that should trigger censoring — the canonical set from
+    # the detector module (NudeNet 3.x names; the old 2.x names here made
+    # every scenario score as safe).
+    from pureframe.pipeline.detect.nudity import EXPLICIT_LABELS
+
+    explicit_labels = EXPLICIT_LABELS
 
     for scenario in SYNTHETIC_SCENARIOS:
         frame = _generate_synthetic_frame(scenario["frame_type"])
