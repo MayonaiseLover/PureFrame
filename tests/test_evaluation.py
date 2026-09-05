@@ -198,7 +198,7 @@ class TestRunSyntheticBenchmark:
         # Create a fake detection result
         fake_det = MagicMock()
         fake_det.score = 0.85
-        fake_det.label = "EXPOSED_BREAST_F"
+        fake_det.label = "FEMALE_BREAST_EXPOSED"
 
         # Mock detector that returns one detection per frame
         detector = MagicMock()
@@ -238,7 +238,7 @@ class TestRunSyntheticBenchmark:
 
         fake_det = MagicMock()
         fake_det.score = 0.65
-        fake_det.label = "EXPOSED_GENITALIA_F"
+        fake_det.label = "FEMALE_GENITALIA_EXPOSED"
 
         detector = MagicMock()
         detector.detect_batch.return_value = [[fake_det]]
