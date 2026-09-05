@@ -183,8 +183,10 @@ class TestSyntheticFrameGeneration:
     def test_unknown_type_returns_black(self):
         frame = _generate_synthetic_frame("totally_unknown")
         assert frame.shape == (480, 640, 3)
-        # Should be all zeros (black)
-        assert frame.sum() == 0
+        # Unknown type paints no layout, but the deterministic photographic
+        # texture pass (noise + gradient) still applies — keep it near-black.
+        assert int(frame.max()) <= 60
+        assert int(frame.mean()) < 40
 
 
 class TestRunSyntheticBenchmark:
