@@ -40,7 +40,8 @@ def test_cpu_profile_uses_quantized_model(tmp_path):
         det.detect_batch([MagicMock()])
         quant.assert_called_once()
         _, kwargs = ctor.call_args
-        assert kwargs.get("model_path") == "/cache/nudenet_int8.onnx"
+        # Compare via Path so the assertion holds on Windows separators too.
+        assert Path(kwargs.get("model_path")) == Path("/cache/nudenet_int8.onnx")
 
 
 def test_quantize_disabled_uses_fp32(tmp_path):
