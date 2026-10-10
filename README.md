@@ -16,7 +16,7 @@
 
 PureFrame blurs nudity, sexual activity, and intense kissing in video files. The blur follows the detected areas as they move. Nothing gets cut, so you keep the dialogue and the rest of the scene.
 
-It works with local MP4, MKV, AVI, and WebM files. The first run downloads about 400–500 MB of models; after that, processing works offline. It doesn't upload videos or collect usage data.
+It works with local MP4, MKV, AVI, and WebM files. The first run downloads about 400-500 MB of models; after that, processing works offline. It doesn't upload videos or collect usage data.
 
 ## Install
 
